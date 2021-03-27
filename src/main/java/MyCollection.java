@@ -1,25 +1,29 @@
 package main.java;
 
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class MyCollection<E> implements Collection<E> {
+public final class MyCollection<E> implements Collection<E> {
 
     private int size;
 
-    private Object[] elementData;
+    private Object[] elementData = new Object[10];
 
-    MyCollection(Object[] elementData){
-        this.elementData = elementData;
-        size = elementData.length;
+    static <E> Collection<E> getCollection(final E... elements) {
+        Collection<E> c = new MyCollection<>();
+        for (E e : elements) {
+            c.add(e);
+        }
+        return c;
     }
 
     @Override
-    public boolean add(E e) {
+    public boolean add(final E e) {
         if (size == elementData.length) {
-            elementData = Arrays.copyOf(elementData, (int) ((size+1) * 1.5f));
+            elementData = Arrays.copyOf(elementData, (int) ((size + 1) * 1.5f));
         }
         elementData[size++] = e;
         return true;
@@ -41,13 +45,21 @@ public class MyCollection<E> implements Collection<E> {
     }
 
     @Override
-    public boolean contains(Object o) {
+    public boolean contains(final Object o) {
         boolean result = false;
         Iterator<Integer> it = (Iterator<Integer>) this.iterator();
-        while (it.hasNext()){
-            if (it.next().equals(o)){
-                result = true;
-                break;
+        while (it.hasNext()) {
+            Object temp = it.next();
+            if (temp != null) {
+                if (temp.equals(o)) {
+                    result = true;
+                    break;
+                } else {
+                    if (o == null) {
+                        result = true;
+                        break;
+                    }
+                }
             }
         }
         return result;
@@ -55,42 +67,67 @@ public class MyCollection<E> implements Collection<E> {
 
     @Override
     public Object[] toArray() {
-        Object[] answer = new Object[this.size];
+        Object[] answer = new Object[size];
+        int i = 0;
         Iterator<Integer> it = (Iterator<Integer>) this.iterator();
-        for (int i =0; i<this.size; i++){
+        while (it.hasNext()) {
             answer[i] = it.next();
+            i += 1;
         }
         return answer;
     }
 
     @Override
-    public <T> T[] toArray(T[] a) {
-        T[] answer = null;
-        for (int i =0; i<a.length; i++){
+    public <T> T[] toArray(final T[] a) {
+        int l = size;
+        if (l < a.length) {
+            l = a.length;
+        }
+        T[] answer = (T[]) new Object[l];
+        int i = 0;
+        Iterator<Integer> it = (Iterator<Integer>) this.iterator();
+        while (it.hasNext()) {
+            answer[i] = (T) it.next();
+            i += 1;
+        }
+
+        for (; i < l; i++) {
             answer[i] = a[i];
         }
+
         return answer;
     }
 
     @Override
-    public boolean remove(Object o) {
+    public boolean remove(final Object o) {
         boolean result = false;
         Iterator<Integer> it = (Iterator<Integer>) this.iterator();
-        while (it.hasNext()){
-            if (it.next().equals(o)){
-                it.remove();
-                result = true;
-                break;
+        while (it.hasNext()) {
+            Object temp = it.next();
+            if (temp != null) {
+                if (temp.equals(o)) {
+
+                    it.remove();
+                    result = true;
+                    break;
+                }
+            } else {
+                if (o == null) {
+                    it.remove();
+                    result = true;
+                    break;
+                }
             }
         }
         return result;
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public boolean containsAll(final Collection<?> c) {
         Iterator<Integer> it = (Iterator<Integer>) c.iterator();
         while (it.hasNext()) {
-            if (!this.contains(it.next())){
+            Object temp = it.next();
+            if (!this.contains(temp)) {
                 return false;
             }
         }
@@ -98,9 +135,9 @@ public class MyCollection<E> implements Collection<E> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
+    public boolean addAll(final Collection<? extends E> c) {
         Iterator<Integer> it = (Iterator<Integer>) c.iterator();
-        while (it.hasNext()){
+        while (it.hasNext()) {
             if (size == elementData.length) {
                 elementData = Arrays.copyOf(elementData, (int) (size * 1.5f));
             }
@@ -110,19 +147,27 @@ public class MyCollection<E> implements Collection<E> {
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(final Collection<?> c) {
         boolean result = false;
         Iterator<Integer> it = (Iterator<Integer>) this.iterator();
+
         while (it.hasNext()) {
-            Integer temp = it.next();
-            //System.out.println("temp " + temp);
             Iterator<Integer> udoli = (Iterator<Integer>) c.iterator();
+            Object temp = it.next();
             while (udoli.hasNext()) {
-                Integer tempUdoli = udoli.next();
-                if (tempUdoli.equals(temp)){
-                    //System.out.println("tempUdoli " + tempUdoli);
-                    it.remove();
-                    result = true;
+                Object udoliTemp = udoli.next();
+                if (temp != null) {
+                    if (temp.equals(udoliTemp)) {
+                        it.remove();
+                        result = true;
+                        break;
+                    }
+                } else {
+                    if (udoliTemp == null) {
+                        it.remove();
+                        result = true;
+                        break;
+                    }
                 }
             }
         }
@@ -130,38 +175,30 @@ public class MyCollection<E> implements Collection<E> {
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(final Collection<?> c) {
         boolean answer = false;
         Iterator<Integer> it = (Iterator<Integer>) this.iterator();
-        Iterator<Integer> udoli = (Iterator<Integer>) c.iterator();
-        System.out.println("start");
-        while (it.hasNext()){
-            Integer temp = it.next();
-            if (udoli.hasNext()){
-                Integer tempUdoli = udoli.next();
-                System.out.println("temp: " + temp + "|tempUdoli: " + tempUdoli);
-                if (!c.contains(temp)){
-                    this.removeAll(Arrays.asList(temp));
-                    answer = true;
-                }
+
+        while (it.hasNext()) {
+            if (!c.contains(it.next())) {
+                answer = true;
+                it.remove();
             }
         }
+
         return answer;
     }
 
     @Override
     public void clear() {
-        if (this.iterator().hasNext()){
-            while (this.iterator().hasNext()){
-                Iterator<Integer> it = (Iterator<Integer>) this.iterator();
-                this.removeAll(Arrays.asList(it.next()));
-            }
-        }
+        this.removeAll(this);
+        this.removeAll(this);
     }
 
     private class MyIterator<T> implements Iterator<T> {
 
         int cursor = 0;
+        boolean n = false;
 
         @Override
         public boolean hasNext() {
@@ -169,30 +206,35 @@ public class MyCollection<E> implements Collection<E> {
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public T next() {
-            if(cursor >= size){
+            if (cursor >= size) {
                 throw new NoSuchElementException();
             }
+            n = true;
             return (T) elementData[cursor++];
         }
 
         @Override
-        public void remove() {
+        public void remove() throws IllegalStateException {
+            if (!n) {
+                throw new IllegalStateException("remove");
+            }
             try {
-                while (cursor<size){
-                    elementData[cursor-1] = elementData[cursor];
+                while (cursor < size) {
+                    elementData[cursor - 1] = elementData[cursor];
                     cursor++;
                 }
                 size--;
-                cursor=1;
-            }
-            catch (UnsupportedOperationException e){
+                cursor = 1;
+                n = false;
+            } catch (UnsupportedOperationException e) {
                 throw new UnsupportedOperationException("remove");
-            }
-            catch (IllegalStateException e){
-                System.out.println(e);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                throw new ArrayIndexOutOfBoundsException("remove");
+            } catch (IllegalStateException e) {
+                throw new IllegalStateException("remove");
             }
         }
+
     }
 }
